@@ -1,0 +1,15 @@
+{
+  "pages": [
+    "pages/index/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "微信定位小程序",
+    "navigationBarBackgroundColor": "#2b7ef7",
+    "navigationBarTextStyle": "white"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于展示当前位置和解析地理位置"
+    }
+  }
+}

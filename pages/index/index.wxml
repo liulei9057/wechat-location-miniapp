@@ -1,0 +1,24 @@
+<view class="container">
+  <view class="panel">
+    <text class="title">微信定位小程序</text>
+    <text class="status">状态：{{status}}</text>
+    <text class="address">地址：{{address}}</text>
+    <text class="coords">经度：{{longitude}}，纬度：{{latitude}}</text>
+  </view>
+
+  <view class="action-row">
+    <button type="primary" bindtap="getCurrentLocation">获取当前位置</button>
+    <button type="default" bindtap="startWatchLocation" wx:if="{{!isWatching}}">开启实时定位</button>
+    <button type="warn" bindtap="stopWatchLocation" wx:else>停止实时定位</button>
+  </view>
+
+  <map
+    id="locationMap"
+    latitude="{{latitude}}"
+    longitude="{{longitude}}"
+    scale="16"
+    markers="{{markers}}"
+    show-location
+    style="width: 100%; height: 520rpx; margin-top: 24rpx; border-radius: 16rpx;"
+  ></map>
+</view>

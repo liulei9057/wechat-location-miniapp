@@ -1,0 +1,34 @@
+{
+  "description": "微信定位小程序示例项目",
+  "packOptions": {
+    "ignore": [
+      {
+        "type": "file",
+        "value": "README.md"
+      }
+    ]
+  },
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "enhance": false,
+    "postcss": true,
+    "minified": true,
+    "newFeature": true,
+    "autoAudits": false,
+    "coverView": true,
+    "showShadowRootInWXMLPanel": true,
+    "scopeDataCheck": false,
+    "useCompilerModule": false,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "compileType": "miniprogram",
+  "libVersion": "2.31.0",
+  "appid": "wxe7f9c1b2b7d5d1a4",
+  "projectname": "wechat-location-miniapp",
+  "condition": {}
+}
