@@ -1,15 +1,15 @@
 .container {
   padding: 24rpx;
   box-sizing: border-box;
-  background: #f5f7fb;
+  background: linear-gradient(180deg, #eef5ff 0%, #f7f9fc 100%);
   min-height: 100vh;
 }
 
 .panel {
-  background: #ffffff;
+  background: #fff;
   border-radius: 20rpx;
   padding: 26rpx;
-  box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.04);
+  box-shadow: 0 12rpx 26rpx rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   gap: 12rpx;
@@ -27,6 +27,7 @@
   font-size: 28rpx;
   color: #4f5b7a;
   line-height: 1.7;
+  word-break: break-all;
 }
 
 .action-row {
@@ -38,6 +39,7 @@
 
 button {
   width: 100%;
+  border-radius: 12rpx;
 }
 
 map {

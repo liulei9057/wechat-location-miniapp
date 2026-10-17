@@ -10,6 +10,7 @@
     <button type="primary" bindtap="getCurrentLocation">获取当前位置</button>
     <button type="default" bindtap="startWatchLocation" wx:if="{{!isWatching}}">开启实时定位</button>
     <button type="warn" bindtap="stopWatchLocation" wx:else>停止实时定位</button>
+    <button type="default" bindtap="clearTrack">清空轨迹</button>
   </view>
 
   <map
@@ -18,6 +19,7 @@
     longitude="{{longitude}}"
     scale="16"
     markers="{{markers}}"
+    polyline="{{polyline}}"
     show-location
     style="width: 100%; height: 520rpx; margin-top: 24rpx; border-radius: 16rpx;"
   ></map>

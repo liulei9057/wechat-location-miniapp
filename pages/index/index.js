@@ -5,23 +5,22 @@ Page({
     latitude: 39.9042,
     longitude: 116.4074,
     markers: [],
+    polyline: [],
     address: '未获取地址',
     status: '等待定位',
     isWatching: false,
     watchId: null,
+    trackPoints: [],
   },
 
   onLoad() {
-    const initial = {
-      latitude: this.data.latitude,
-      longitude: this.data.longitude,
+    this.setData({
       markers: [{
         id: 1,
-        latitude: this.data.latitude,
-        longitude: this.data.longitude,
+        latitude: 39.9042,
+        longitude: 116.4074,
         width: 24,
         height: 24,
-        iconPath: '/images/location-marker.png',
         title: '当前位置',
         callout: {
           content: '当前位置',
@@ -33,9 +32,13 @@ Page({
           display: 'ALWAYS',
         },
       }],
-    };
-
-    this.setData(initial);
+      polyline: [{
+        points: [{ latitude: 39.9042, longitude: 116.4074 }],
+        color: '#2e7dff',
+        width: 4,
+        dotted: false,
+      }],
+    });
   },
 
   onUnload() {
@@ -67,17 +70,15 @@ Page({
           return;
         }
 
-        if (res.authSetting['scope.userLocation'] || res.authSetting['scope.userLocation'] === undefined) {
-          wx.authorize({
-            scope: 'scope.userLocation',
-            success() {
-              self.fetchLocation();
-            },
-            fail() {
-              wx.showToast({ title: '定位授权失败', icon: 'none' });
-            },
-          });
-        }
+        wx.authorize({
+          scope: 'scope.userLocation',
+          success() {
+            self.fetchLocation();
+          },
+          fail() {
+            wx.showToast({ title: '定位授权失败', icon: 'none' });
+          },
+        });
       },
       fail() {
         wx.showToast({ title: '请求权限失败', icon: 'none' });
@@ -92,20 +93,36 @@ Page({
     wx.getLocation({
       type: 'gcj02',
       success(res) {
-        const latitude = res.latitude;
-        const longitude = res.longitude;
+        const point = {
+          latitude: res.latitude,
+          longitude: res.longitude,
+        };
+
+        const trackPoints = self.data.trackPoints.length > 0 ? self.data.trackPoints : [point];
+        const last = trackPoints[trackPoints.length - 1];
+        const distance = self._distanceBetween(last, point);
+
+        if (distance > 3 || trackPoints.length === 1) {
+          trackPoints.push(point);
+        }
 
         self.setData({
-          latitude,
-          longitude,
+          latitude: res.latitude,
+          longitude: res.longitude,
           status: '已获取当前位置',
+          trackPoints,
+          polyline: [{
+            points: trackPoints,
+            color: '#2e7dff',
+            width: 4,
+            dotted: false,
+          }],
           markers: [{
             id: 1,
-            latitude,
-            longitude,
+            latitude: res.latitude,
+            longitude: res.longitude,
             width: 24,
             height: 24,
-            iconPath: '/images/location-marker.png',
             title: '当前位置',
             callout: {
               content: '当前位置',
@@ -119,7 +136,7 @@ Page({
           }],
         });
 
-        self.reverseGeocode(latitude, longitude);
+        self.reverseGeocode(res.latitude, res.longitude);
       },
       fail(err) {
         console.error('getLocation fail:', err);
@@ -136,7 +153,7 @@ Page({
 
     if (!MAP_KEY || MAP_KEY === 'YOUR_TENCENT_MAP_KEY') {
       this.setData({
-        address: '请在 index.js 中替换为真实的腾讯地图 key',
+        address: '请替换为自己的腾讯地图 key 后启用逆地理编码',
       });
       return;
     }
@@ -149,17 +166,12 @@ Page({
         output: 'json',
       },
       success(res) {
-        const result = res.data && res.data.result;
-        const address = result && result.address ? result.address : '无法解析地址';
-
-        self.setData({
-          address,
-        });
+        const info = res.data && res.data.result;
+        const resultAddress = info && info.address ? info.address : '无法解析地址';
+        self.setData({ address: resultAddress });
       },
       fail() {
-        self.setData({
-          address: '地址解析失败',
-        });
+        self.setData({ address: '地址解析失败' });
       },
     });
   },
@@ -178,18 +190,37 @@ Page({
             return;
           }
 
+          const point = {
+            latitude: res.latitude,
+            longitude: res.longitude,
+          };
+
+          const currentTrack = self.data.trackPoints.slice();
+          const last = currentTrack[currentTrack.length - 1];
+          const distance = last ? self._distanceBetween(last, point) : Number.MAX_VALUE;
+
+          if (!last || distance > 3) {
+            currentTrack.push(point);
+          }
+
           self.setData({
             latitude: res.latitude,
             longitude: res.longitude,
             status: '实时定位中',
             isWatching: true,
+            trackPoints: currentTrack.slice(-200),
+            polyline: [{
+              points: currentTrack.slice(-200),
+              color: '#2e7dff',
+              width: 4,
+              dotted: false,
+            }],
             markers: [{
               id: 1,
               latitude: res.latitude,
               longitude: res.longitude,
               width: 24,
               height: 24,
-              iconPath: '/images/location-marker.png',
               title: '实时位置',
               callout: {
                 content: '实时位置',
@@ -235,57 +266,30 @@ Page({
       },
     });
   },
+
+  clearTrack() {
+    this.setData({
+      trackPoints: [],
+      polyline: [{ points: [], color: '#2e7dff', width: 4, dotted: false }],
+      status: '轨迹已清空',
+    });
+  },
+
+  _distanceBetween(a, b) {
+    if (!a || !b) return Number.MAX_VALUE;
+
+    const toRad = (value) => value * Math.PI / 180;
+    const earthRadius = 6371000;
+    const dLat = toRad(b.latitude - a.latitude);
+    const dLng = toRad(b.longitude - a.longitude);
+    const lat1 = toRad(a.latitude);
+    const lat2 = toRad(b.latitude);
+
+    const h =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1) * Math.cos(lat2);
+
+    const c = 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    return earthRadius * c;
+  },
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
